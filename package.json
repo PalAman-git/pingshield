@@ -1,4 +1,8 @@
 {
-    "private":true,
-    "workspaces":["apps/*","packages/*"]
+    "name":"pingshield",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ]
 }
