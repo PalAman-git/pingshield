@@ -15,7 +15,6 @@ export async function middleware(request: NextRequest) {
                 },
                 setAll(cookiesToSet) {
                     cookiesToSet.forEach(({ name, value, options }) => {
-                        request.cookies.set(name, value)
                         response.cookies.set(name, value, options)
                     })
                 }
@@ -25,14 +24,19 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    //Redirect to login if accessing dashboard without a session
-    if(!user && request.nextUrl.pathname.startsWith('/dashboard')){
-        return NextResponse.redirect(new URL('/login',request.url))
+    // 🔐 Protect dashboard
+    if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+        return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // 🚀 Optional: prevent logged-in users from visiting login
+    if (user && request.nextUrl.pathname === "/login") {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     return response
 }
 
 export const config = {
-    matcher:['/dashboard/:path*']
+    matcher: ['/dashboard/:path*',"/login"]
 }
