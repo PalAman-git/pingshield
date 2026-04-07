@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +18,8 @@ import { Separator } from '@/components/ui/separator'
 import { Eye, EyeOff, Hexagon, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
-  const supabase = createClient()
+  const supabase = createClient();
+  const router = useRouter();
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,6 +33,8 @@ export default function LoginPage() {
     setError(null)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) setError(error.message)
+
+    router.replace('/dashboard');
     setLoading(false)
   }
 
@@ -55,7 +59,7 @@ export default function LoginPage() {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') login()
+    if (e.key === 'Enter') login();
   }
 
   return (
