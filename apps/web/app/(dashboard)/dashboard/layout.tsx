@@ -368,7 +368,7 @@ export default function DashboardLayout({
           <div className="absolute left-0 top-0 h-full">
             <Sidebar
               collapsed={false}
-              onToggle={() => {}}
+              onToggle={() => { }}
               mobile
               onClose={() => setMobileOpen(false)}
             />
