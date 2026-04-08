@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   Plus,
@@ -51,6 +51,9 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+
+import { getActiveMonitors } from "@repo/db"
+import { createClient } from "@/lib/supabase/client"
 
 // Mock data
 const monitors = [
@@ -260,6 +263,17 @@ function AddMonitorDialog() {
 export default function MonitorsPage() {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<"all" | "up" | "down" | "paused">("all")
+  const db = createClient();
+
+  
+  useEffect(() =>{
+    async function load(){
+      const data = await getActiveMonitors(db);
+
+      console.log(data);
+    }
+    load();
+  },[])
 
   const filtered = monitors.filter((m) => {
     const matchesSearch =
