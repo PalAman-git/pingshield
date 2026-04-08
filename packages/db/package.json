@@ -1,8 +1,13 @@
 {
-    "name": "@pingshield/db",
-    "version": "1.0.0",
-    "main": "index.ts",
-    "dependencies": {
-        "@supabase/supabase-js": "^2.101.1"
-    }
+  "name": "@repo/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./monitors": "./monitors.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1"
+  }
 }

@@ -1,5 +1,5 @@
 import { DB } from "./client";
-import { Tables, TablesUpdate } from "../types";
+import { Tables, TablesUpdate } from "./types";
 
 type Monitor = Tables<"monitors">
 type UpdateMonitor = TablesUpdate<"monitors">
@@ -16,6 +16,6 @@ export async function updateMonitorStatus(db: DB, id: string, status: UpdateMoni
         .from("monitors")
         .update({ status })
         .eq("id", id);
-    
+        
     if(error) throw error;
 }
