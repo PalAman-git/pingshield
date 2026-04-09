@@ -1,7 +1,5 @@
 {
     "scripts": {
-        "dev": "tsx index.ts",
-        "start": "node dist/index.ts",
-        "build": "tsc"
+        "start": "tsx index.ts"
     }
 }
