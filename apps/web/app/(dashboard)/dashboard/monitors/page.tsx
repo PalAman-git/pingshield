@@ -51,68 +51,16 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { StatusDot } from "@/components/elements/StatusDot"
 
-import { getActiveMonitors } from "@repo/db"
+import { Constants, Database, getActiveMonitors } from "@repo/db"
 import { createClient } from "@/lib/supabase/client"
+import { Monitor } from "@/types/monitor"
 
-// Mock data
-const monitors = [
-  {
-    id: "1",
-    name: "Main API",
-    url: "https://api.acme.io/health",
-    status: "up" as const,
-    uptime: 99.98,
-    latency: 142,
-    lastChecked: "8s ago",
-    interval: 60,
-    incidents: 0,
-  },
-  {
-    id: "2",
-    name: "Marketing Site",
-    url: "https://acme.io",
-    status: "up" as const,
-    uptime: 100,
-    latency: 89,
-    lastChecked: "12s ago",
-    interval: 60,
-    incidents: 0,
-  },
-  {
-    id: "3",
-    name: "Checkout Service",
-    url: "https://checkout.acme.io/status",
-    status: "down" as const,
-    uptime: 98.41,
-    latency: null,
-    lastChecked: "14s ago",
-    interval: 60,
-    incidents: 1,
-  },
-  {
-    id: "4",
-    name: "Auth Service",
-    url: "https://auth.acme.io/health",
-    status: "up" as const,
-    uptime: 99.72,
-    latency: 203,
-    lastChecked: "22s ago",
-    interval: 60,
-    incidents: 0,
-  },
-  {
-    id: "5",
-    name: "Webhooks",
-    url: "https://hooks.acme.io/ping",
-    status: "paused" as const,
-    uptime: 99.1,
-    latency: 177,
-    lastChecked: "—",
-    interval: 60,
-    incidents: 0,
-  },
-]
+
+const pingIntervals = Constants.public.Enums.ping_intervals;
+type FilterStatus = Database["public"]["Enums"]["monitor_status"] | "all";
+
 
 const stats = [
   { label: "Total monitors", value: "5", icon: Activity, color: "text-zinc-400" },
@@ -121,28 +69,6 @@ const stats = [
   { label: "Avg uptime", value: "99.44%", icon: TrendingUp, color: "text-blue-400" },
 ]
 
-function StatusDot({ status }: { status: "up" | "down" | "paused" | "pending" }) {
-  if (status === "up") {
-    return (
-      <span className="relative flex h-2.5 w-2.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
-        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-      </span>
-    )
-  }
-  if (status === "down") {
-    return (
-      <span className="relative flex h-2.5 w-2.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-50" />
-        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-400" />
-      </span>
-    )
-  }
-  if (status === "paused") {
-    return <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
-  }
-  return <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" />
-}
 
 function UptimeBars({ uptime }: { uptime: number }) {
   // Generate 30 mock bars
@@ -213,14 +139,20 @@ function AddMonitorDialog() {
               <Label className="text-xs font-medium text-zinc-400">
                 Check every
               </Label>
-              <Select defaultValue="60">
+              <Select defaultValue="300">
                 <SelectTrigger className="h-9 border-zinc-700 bg-zinc-800 text-sm text-zinc-300 focus:ring-emerald-500/50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="border-zinc-700 bg-zinc-800">
-                  <SelectItem value="30" className="text-sm text-zinc-300">30 seconds</SelectItem>
-                  <SelectItem value="60" className="text-sm text-zinc-300">60 seconds</SelectItem>
-                  <SelectItem value="300" className="text-sm text-zinc-300">5 minutes</SelectItem>
+                  {
+                    pingIntervals.map((interval)=> (
+                      <SelectItem key={interval} value={interval} className="text-sm text-zinc-300">
+                        {
+                          interval === "30"?"30 seconds":interval === "60" ? "60 seconds" : interval === "300" ? "5 minutes" : "10 minutes"
+                        }
+                      </SelectItem>
+                    ))
+                  }
                 </SelectContent>
               </Select>
             </div>
@@ -262,23 +194,26 @@ function AddMonitorDialog() {
 
 export default function MonitorsPage() {
   const [search, setSearch] = useState("")
-  const [filter, setFilter] = useState<"all" | "up" | "down" | "paused">("all")
+  const [filter, setFilter] = useState<FilterStatus>("all")
+  const [monitors,setMonitors] = useState<Monitor[]>([]);
   const db = createClient();
 
   
   useEffect(() =>{
     async function load(){
       const data = await getActiveMonitors(db);
-
+      setMonitors(data);
       console.log(data);
     }
     load();
   },[])
 
+  if(monitors === null) return;
+
   const filtered = monitors.filter((m) => {
     const matchesSearch =
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.url.toLowerCase().includes(search.toLowerCase())
+      m.name?.toLowerCase().includes(search.toLowerCase()) ||
+      m.url?.toLowerCase().includes(search.toLowerCase())
     const matchesFilter = filter === "all" || m.status === filter
     return matchesSearch && matchesFilter
   })
@@ -347,17 +282,7 @@ export default function MonitorsPage() {
 
       {/* Monitor table */}
       <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/30">
-        {/* Table header */}
-        <div className="grid grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 border-b border-zinc-800 px-5 py-3">
-          {["Monitor", "Status", "Uptime", "Latency", ""].map((col) => (
-            <div
-              key={col}
-              className="text-[11px] font-medium uppercase tracking-wider text-zinc-600"
-            >
-              {col}
-            </div>
-          ))}
-        </div>
+        
 
         {/* Rows */}
         <div className="divide-y divide-zinc-800/60">
@@ -410,27 +335,27 @@ export default function MonitorsPage() {
                 <p
                   className={cn(
                     "text-sm font-semibold tabular-nums",
-                    monitor.uptime > 99.5
+                    monitor.avg_uptime > 99.5
                       ? "text-emerald-400"
-                      : monitor.uptime > 95
+                      : monitor.avg_uptime > 95
                       ? "text-amber-400"
                       : "text-red-400"
                   )}
                 >
-                  {monitor.uptime.toFixed(2)}%
+                  {monitor.avg_uptime.toFixed(2)}%
                 </p>
                 <p className="text-[10px] text-zinc-600">last 30 days</p>
               </div>
 
               {/* Latency */}
               <div>
-                {monitor.latency ? (
+                {monitor.avg_latency_ms ? (
                   <>
                     <p className="text-sm font-semibold tabular-nums text-zinc-300">
-                      {monitor.latency}ms
+                      {monitor.avg_latency_ms}ms
                     </p>
                     <p className="text-[10px] text-zinc-600">
-                      {monitor.lastChecked}
+                      {monitor.last_checked_at}
                     </p>
                   </>
                 ) : (

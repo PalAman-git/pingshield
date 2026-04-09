@@ -149,6 +149,8 @@ export type Database = {
       }
       monitors: {
         Row: {
+          avg_latency_ms: number | null
+          avg_uptime: number
           consecutive_failures: number
           created_at: string
           failure_threshold: number
@@ -162,11 +164,14 @@ export type Database = {
           paused: boolean
           status: Database["public"]["Enums"]["monitor_status"]
           timeout_ms: number
+          total_checks: number
           updated_at: string | null
           url: string
           user_id: string
         }
         Insert: {
+          avg_latency_ms?: number | null
+          avg_uptime?: number
           consecutive_failures?: number
           created_at?: string
           failure_threshold?: number
@@ -180,11 +185,14 @@ export type Database = {
           paused?: boolean
           status?: Database["public"]["Enums"]["monitor_status"]
           timeout_ms?: number
+          total_checks?: number
           updated_at?: string | null
           url: string
           user_id: string
         }
         Update: {
+          avg_latency_ms?: number | null
+          avg_uptime?: number
           consecutive_failures?: number
           created_at?: string
           failure_threshold?: number
@@ -198,6 +206,7 @@ export type Database = {
           paused?: boolean
           status?: Database["public"]["Enums"]["monitor_status"]
           timeout_ms?: number
+          total_checks?: number
           updated_at?: string | null
           url?: string
           user_id?: string
@@ -328,7 +337,7 @@ export type Database = {
     Enums: {
       alert_type: "up" | "down" | "pending"
       http_method: "GET" | "POST" | "HEAD"
-      monitor_status: "pending" | "up" | "down"
+      monitor_status: "pending" | "up" | "down" | "paused"
       notification_chanels: "email" | "slack" | "sms" | "webhook"
       ping_intervals: "30" | "60" | "300" | "600"
     }
@@ -460,7 +469,7 @@ export const Constants = {
     Enums: {
       alert_type: ["up", "down", "pending"],
       http_method: ["GET", "POST", "HEAD"],
-      monitor_status: ["pending", "up", "down"],
+      monitor_status: ["pending", "up", "down", "paused"],
       notification_chanels: ["email", "slack", "sms", "webhook"],
       ping_intervals: ["30", "60", "300", "600"],
     },
