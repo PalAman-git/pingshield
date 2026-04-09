@@ -1,4 +1,4 @@
-import { Database } from "@repo/db/types"
+import { Database } from "@repo/db"
 import { createDb } from "./lib/client";
 
 type Monitor = Database["public"]["Tables"]["monitors"]["Row"];

@@ -23,7 +23,6 @@
       "@repo/db": ["../../packages/db/index.ts"],
       "@repo/db/*": ["../../packages/db/*"]
     },
-    "baseUrl": "."
   },
   "include": [
     "next-env.d.ts",

@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./index.ts",
-    "./monitors": "./monitors.ts"
+    ".": "./dist/index.js",
+    "./monitors": "./dist/monitors.js"
+  },
+  "scripts": {
+    "build": "tsc"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1"
