@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_logs: {
+        Row: {
+          channel_id: string
+          delivered: boolean
+          error: string | null
+          id: string
+          incident_id: string
+          payload: Json | null
+          sent_at: string
+          type: Database["public"]["Enums"]["alert_type"]
+          updated_at: string
+        }
+        Insert: {
+          channel_id: string
+          delivered?: boolean
+          error?: string | null
+          id?: string
+          incident_id: string
+          payload?: Json | null
+          sent_at?: string
+          type: Database["public"]["Enums"]["alert_type"]
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: string
+          delivered?: boolean
+          error?: string | null
+          id?: string
+          incident_id?: string
+          payload?: Json | null
+          sent_at?: string
+          type?: Database["public"]["Enums"]["alert_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_logs_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "notification_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_logs_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checks: {
         Row: {
           checked_at: string
@@ -102,7 +153,7 @@ export type Database = {
           created_at: string
           failure_threshold: number
           id: string
-          interval_seconds: number
+          interval_seconds: Database["public"]["Enums"]["ping_intervals"]
           last_alerted_at: string | null
           last_checked_at: string | null
           method: Database["public"]["Enums"]["http_method"]
@@ -120,7 +171,7 @@ export type Database = {
           created_at?: string
           failure_threshold?: number
           id?: string
-          interval_seconds?: number
+          interval_seconds?: Database["public"]["Enums"]["ping_intervals"]
           last_alerted_at?: string | null
           last_checked_at?: string | null
           method?: Database["public"]["Enums"]["http_method"]
@@ -138,7 +189,7 @@ export type Database = {
           created_at?: string
           failure_threshold?: number
           id?: string
-          interval_seconds?: number
+          interval_seconds?: Database["public"]["Enums"]["ping_intervals"]
           last_alerted_at?: string | null
           last_checked_at?: string | null
           method?: Database["public"]["Enums"]["http_method"]
@@ -157,6 +208,85 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monitors_check_daily: {
+        Row: {
+          avg_latency_ms: number | null
+          day: string
+          down_count: number
+          downtime_seconds: number | null
+          monitor_id: string
+          total_checks: number
+          up_count: number
+        }
+        Insert: {
+          avg_latency_ms?: number | null
+          day: string
+          down_count?: number
+          downtime_seconds?: number | null
+          monitor_id: string
+          total_checks?: number
+          up_count?: number
+        }
+        Update: {
+          avg_latency_ms?: number | null
+          day?: string
+          down_count?: number
+          downtime_seconds?: number | null
+          monitor_id?: string
+          total_checks?: number
+          up_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitors_check_daily_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "monitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_channels: {
+        Row: {
+          created_at: string
+          destination: string
+          enabled: boolean
+          id: string
+          monitor_id: string
+          name: string | null
+          type: Database["public"]["Enums"]["notification_chanels"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          enabled?: boolean
+          id?: string
+          monitor_id: string
+          name?: string | null
+          type?: Database["public"]["Enums"]["notification_chanels"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          enabled?: boolean
+          id?: string
+          monitor_id?: string
+          name?: string | null
+          type?: Database["public"]["Enums"]["notification_chanels"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_channels_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "monitors"
             referencedColumns: ["id"]
           },
         ]
@@ -196,8 +326,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      alert_type: "up" | "down" | "pending"
       http_method: "GET" | "POST" | "HEAD"
       monitor_status: "pending" | "up" | "down"
+      notification_chanels: "email" | "slack" | "sms" | "webhook"
+      ping_intervals: "30" | "60" | "300" | "600"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -325,8 +458,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      alert_type: ["up", "down", "pending"],
       http_method: ["GET", "POST", "HEAD"],
       monitor_status: ["pending", "up", "down"],
+      notification_chanels: ["email", "slack", "sms", "webhook"],
+      ping_intervals: ["30", "60", "300", "600"],
     },
   },
 } as const
