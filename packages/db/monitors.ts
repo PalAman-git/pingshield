@@ -16,6 +16,19 @@ export async function updateMonitorStatus(db: DB, id: string, status: UpdateMoni
         .from("monitors")
         .update({ status })
         .eq("id", id);
-        
+
+    if (error) throw error;
+}
+
+export async function getDueMonitors(db: DB) {
+    const { data, error } = await db
+        .from("monitors")
+        .select("*")
+        .eq("paused", false)
+        .lte("next_check_at", new Date().toISOString())
+        .limit(50);
+    
     if(error) throw error;
+
+    return data;
 }

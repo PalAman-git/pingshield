@@ -4,6 +4,7 @@
     "paths": {
       "@repo/db": ["packages/db/index.ts"],
       "@repo/db/*": ["packages/db/*"]
-    }
+    },
+    "ignoreDeprecations":"6.0"
   }
 }
