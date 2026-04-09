@@ -1,5 +1,9 @@
 {
     "scripts": {
         "start": "tsx index.ts"
-    }
+    },
+    "dependencies": {
+    "tsx": "^4.x",
+    "@supabase/supabase-js": "^2.x"
+  }
 }
