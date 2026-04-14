@@ -28,12 +28,20 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     const db = await createClient();
+    const { data: { user }, } = await db.auth.getUser();
+
+    if (!user) {
+        return Response.json(
+            { error: "Unauthorized" },
+            { status: 401 }
+        )
+    }
 
     try {
         const body = await req.json();
 
         // 1. Insert monitor
-        const monitor = await insertMonitor(db, body);
+        const monitor = await insertMonitor(db, {...body,user_id:user.id});
 
         const intervalMs = parseInt(monitor.interval_seconds) * 1000;
 

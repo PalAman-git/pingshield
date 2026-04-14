@@ -1,11 +1,9 @@
 import { Worker } from "bullmq";
-import IORedis from 'ioredis';
 import { processMonitor } from "./processor";
 import { createDb } from "./lib/client";
+import { connection } from "@repo/queue"
+import { getMonitorById } from "@repo/db"
 
-const connection = new IORedis(process.env.REDIS_URL!, {
-    maxRetriesPerRequest: null,
-});
 
 const db = createDb();
 
@@ -14,11 +12,7 @@ const worker = new Worker(
     async (job) => {
         const { monitorId } = job.data;
 
-        const { data: monitor } = await db
-            .from("monitors")
-            .select("*")
-            .eq("id", monitorId)
-            .single();
+        const monitor = await getMonitorById(db,monitorId);
 
         await processMonitor(monitor);
     },

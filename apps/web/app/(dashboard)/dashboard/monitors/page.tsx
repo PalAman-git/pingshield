@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils"
 import { Constants, Database, getActiveMonitors } from "@repo/db"
 import { createClient } from "@/lib/supabase/client"
 import { Monitor } from "@/types/monitor"
+import { insertMonitor } from "@/lib/api/monitors"
 
 const pingIntervals = Constants.public.Enums.ping_intervals
 const httpMethods = Constants.public.Enums.http_method
@@ -43,8 +44,8 @@ function StatusDot({ status }: { status: string }) {
       )}
       <span className={cn(
         "relative inline-flex h-2 w-2 rounded-full",
-        status === "up"     && "bg-emerald-400",
-        status === "down"   && "bg-red-400",
+        status === "up" && "bg-emerald-400",
+        status === "down" && "bg-red-400",
         status === "paused" && "bg-zinc-600",
       )} />
     </span>
@@ -55,7 +56,7 @@ function StatusDot({ status }: { status: string }) {
    Uptime mini-bar
 ──────────────────────────────────────────────────────────── */
 
-function HourlyStatusBars({ status }: { status: "up" | "down" | "paused"| "pending" }) {
+function HourlyStatusBars({ status }: { status: "up" | "down" | "paused" | "pending" }) {
   // mock for now → later replace with real checks data
   const bars = Array.from({ length: 24 }, () => {
     const rand = Math.random()
@@ -144,8 +145,8 @@ function MonitorRow({ monitor }: { monitor: Monitor }) {
             monitor.status === "paused"
               ? "bg-zinc-700"
               : rand > 0.9
-              ? "bg-red-400"
-              : "bg-emerald-400"
+                ? "bg-red-400"
+                : "bg-emerald-400"
 
           return (
             <div
@@ -185,6 +186,39 @@ function MonitorRow({ monitor }: { monitor: Monitor }) {
 
 function AddMonitorDialog() {
   const [open, setOpen] = useState(false)
+  const [name, setName] = useState("");
+  const [url, setUrl] = useState("");
+  const [interval, setInterval] = useState("300");
+  const [method, setMethod] = useState("GET");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit() {
+    if (!url) return;
+
+    setLoading(true);
+
+    try {
+      await insertMonitor({
+        name,
+        url,
+        method,
+        interval_seconds: Number(interval),
+      });
+
+      // reset form
+      setName("");
+      setUrl("");
+      setInterval("300");
+      setMethod("GET");
+
+      // close dialog
+      setOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -210,12 +244,16 @@ function AddMonitorDialog() {
             <Label className="text-xs font-medium text-zinc-400">Name</Label>
             <Input
               placeholder="My API"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="h-9 border-zinc-700 bg-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-violet-500/50"
             />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium text-zinc-400">URL</Label>
             <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
               placeholder="https://api.example.com/health"
               className="h-9 border-zinc-700 bg-zinc-800 font-mono text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-violet-500/50"
             />
@@ -223,17 +261,17 @@ function AddMonitorDialog() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-zinc-400">Check every</Label>
-              <Select defaultValue="300">
+              <Select value={interval} onValueChange={setInterval}>
                 <SelectTrigger className="h-9 border-zinc-700 bg-zinc-800 text-sm text-zinc-300 focus:ring-violet-500/50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="border-zinc-700 bg-zinc-800">
                   {pingIntervals.map((interval) => (
                     <SelectItem key={interval} value={interval} className="text-sm text-zinc-300">
-                      {interval === "30"  ? "30 seconds"
-                       : interval === "60"  ? "60 seconds"
-                       : interval === "300" ? "5 minutes"
-                       :                      "10 minutes"}
+                      {interval === "30" ? "30 seconds"
+                        : interval === "60" ? "60 seconds"
+                          : interval === "300" ? "5 minutes"
+                            : "10 minutes"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -241,7 +279,7 @@ function AddMonitorDialog() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-zinc-400">Method</Label>
-              <Select defaultValue="GET">
+              <Select value={method} onValueChange={setMethod}>
                 <SelectTrigger className="h-9 border-zinc-700 bg-zinc-800 text-sm text-zinc-300 focus:ring-violet-500/50">
                   <SelectValue />
                 </SelectTrigger>
@@ -264,8 +302,8 @@ function AddMonitorDialog() {
           >
             Cancel
           </Button>
-          <Button size="sm" className="bg-violet-600 text-white hover:bg-violet-500">
-            Create monitor
+          <Button onClick={handleSubmit} disabled={loading} size="sm" className="bg-violet-600 text-white hover:bg-violet-500">
+            {loading ? "Creating..." : "Create Monitor"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -302,17 +340,17 @@ export default function MonitorsPage() {
   })
 
   // Derived summary stats
-  const upCount   = monitors.filter((m) => m.status === "up").length
+  const upCount = monitors.filter((m) => m.status === "up").length
   const downCount = monitors.filter((m) => m.status === "down").length
   const avgUptime = monitors.length
     ? monitors.reduce((acc, m) => acc + (m.avg_uptime ?? 0), 0) / monitors.length
     : 0
 
   const summaryChips = [
-    { label: "Total monitors", value: String(monitors.length),          icon: Activity,     color: "text-zinc-400"    },
-    { label: "Operational",    value: String(upCount),                   icon: Shield,       color: "text-emerald-400" },
-    { label: "Down now",       value: String(downCount),                 icon: AlertCircle,  color: "text-red-400"     },
-    { label: "Avg uptime",     value: `${avgUptime.toFixed(2)}%`,        icon: TrendingUp,   color: "text-violet-400"  },
+    { label: "Total monitors", value: String(monitors.length), icon: Activity, color: "text-zinc-400" },
+    { label: "Operational", value: String(upCount), icon: Shield, color: "text-emerald-400" },
+    { label: "Down now", value: String(downCount), icon: AlertCircle, color: "text-red-400" },
+    { label: "Avg uptime", value: `${avgUptime.toFixed(2)}%`, icon: TrendingUp, color: "text-violet-400" },
   ]
 
   return (
