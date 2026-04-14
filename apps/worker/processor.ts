@@ -50,35 +50,35 @@ export async function handleResult(monitor: Monitor,
         is_up: result.isUp,
         latency_ms: result.isUp ? result.latency : null,
         status_code: result.statusCode,
-        error:result.errorMsg,
-        checked_at:now
+        error: result.errorMsg,
+        checked_at: now
     })
 
     //failure logic
     let failures = monitor.consecutive_failures
 
-    if(result.isUp){
+    if (result.isUp) {
         failures = 0
-    }else{
+    } else {
         failures += 1
     }
 
     let newStatus = monitor.status
 
-    if(result.isUp){
+    if (result.isUp) {
         newStatus = "up"
-    }else if(failures >= monitor.failure_threshold){
+    } else if (failures >= monitor.failure_threshold) {
         newStatus = "down"
     }
 
     //update monitor
     await db.from("monitors").update({
-        status:newStatus,
-        consecutive_failures:failures,
-        last_checked_at:now,
+        status: newStatus,
+        consecutive_failures: failures,
+        last_checked_at: now,
         next_check_at: new Date(
-            Date.now() + parseInt(monitor.interval_seconds)*1000
+            Date.now() + parseInt(monitor.interval_seconds) * 1000
         ).toISOString()
     })
-    .eq("id",monitor.id)
+        .eq("id", monitor.id)
 }
