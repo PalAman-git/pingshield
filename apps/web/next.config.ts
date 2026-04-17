@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  transpilePackages: ["@repo/db"]
+  transpilePackages: ["@repo/db","@repo/queue"]
 }
 
 export default nextConfig;

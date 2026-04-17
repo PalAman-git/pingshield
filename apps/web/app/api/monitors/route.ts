@@ -9,7 +9,7 @@ import {
     deleteMonitor,
 } from "@repo/db";
 
-import { monitorQueue } from "@repo/queue"
+import { getMonitorQueue } from "@repo/queue"
 
 
 export async function GET() {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         const intervalMs = parseInt(monitor.interval_seconds) * 1000;
 
         // 2. Schedule job
-        await monitorQueue.add(
+        await getMonitorQueue().add(
             "check-monitor",
             { monitorId: monitor.id },
             {
@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest) {
         }
 
         // 2. Remove old job
-        await monitorQueue.removeJobScheduler(
+        await getMonitorQueue().removeJobScheduler(
             `monitor-${id}`
         );
 
@@ -97,7 +97,7 @@ export async function PUT(req: NextRequest) {
         const intervalMs = parseInt(updated.interval_seconds) * 1000;
 
         // 4. Add new job
-        await monitorQueue.add(
+        await getMonitorQueue().add(
             "check-monitor",
             { monitorId: id },
             {
@@ -135,7 +135,7 @@ export async function DELETE(req: NextRequest) {
         }
 
         // 2. Remove job
-        await monitorQueue.removeJobScheduler(
+        await getMonitorQueue().removeJobScheduler(
             `monitor-${id}`
         );
 

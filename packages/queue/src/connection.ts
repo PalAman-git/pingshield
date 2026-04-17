@@ -1,5 +1,12 @@
 import IORedis from "ioredis";
 
-export const connection = new IORedis(process.env.REDIS_URL!,{
-    maxRetriesPerRequest:null,
-})
+let redis: IORedis | null = null;
+
+export function getConnection() {
+  if (!redis) {
+    redis = new IORedis(process.env.REDIS_URL!, {
+      maxRetriesPerRequest: null,
+    });
+  }
+  return redis;
+}
