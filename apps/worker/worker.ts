@@ -1,11 +1,12 @@
 import { Worker } from "bullmq";
 import { processMonitor } from "./processor";
 import { createDb } from "./lib/client";
-import { connection } from "@repo/queue"
+import { getConnection } from "@repo/queue"
 import { getMonitorById } from "@repo/db"
 
 
 const db = createDb();
+const connection = getConnection();
 
 const worker = new Worker(
     "monitor-queue",
