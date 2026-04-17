@@ -1,4 +1,5 @@
 {
+    "name": "@repo/worker",
     "type": "module",
     "scripts": {
         "build": "tsc",
