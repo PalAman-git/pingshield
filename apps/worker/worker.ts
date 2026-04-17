@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
-import { processMonitor } from "./processor";
-import { createDb } from "./lib/client";
+import { processMonitor } from "./processor.js";
+import { createDb } from "./lib/client.js";
 import { getConnection } from "@repo/queue"
 import { getMonitorById } from "@repo/db"
 
